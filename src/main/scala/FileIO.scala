@@ -1,18 +1,20 @@
 import scala.io.Source
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 
 object FileIO {
   /* Pure function to read subscriptions from a JSON file */
   def readSubscriptions(): List[Main.Subscription] = {
+    implicit val formats = org.json4s.DefaultFormats
     val source = Source.fromFile("./subscriptions.json")
-    val lines = source.getLines().toList
-    val filtered_lines = lines.filter(line => line.contains("name") || line.contains("url"))
-    source.close()
-    val output = filtered_lines.grouped(2).map { line =>
-      val name = line(0).split(":", 2)(1).trim.stripPrefix("\"").stripSuffix("\",")
-      val url = line(1).split(":", 2)(1).trim.stripPrefix("\"").stripSuffix("\"")
+    val stringSource = source.mkString
+    val json = parse(stringSource).children.map { item =>
+      val url = (item \ "url").extract[String]
+      val name = (item \ "name").extract[String]
       (name, url)
     }.toList
-    output
+    source.close()
+    json
   }
 
   // Pure function to download JSON feed from a URL
