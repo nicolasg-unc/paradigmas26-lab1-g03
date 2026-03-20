@@ -22,26 +22,15 @@ object FileIO {
 
   def extractPosts(subreddit: String, jsonContent: String): List[Main.Post] = {
     implicit val formats = org.json4s.DefaultFormats
-    
-    try {
-      val json = parse(jsonContent)
-      val children = (json \ "data" \ "children").children
-      
-      children.flatMap { child =>
-        try {
-          val title = (child \ "data" \ "title").extract[String]
-          val selftext = (child \ "data" \ "selftext").extract[String]
-          val createdUtc = (child \ "data" \ "created_utc").extract[String]
-          // val createdUtc = (data \ "created_utc").extract[Double].toLong
-          // val date = TextProcessing.formatDateFromUTC(createdUtc)
-          // TODO: implementar formateo estandar de fecha
-          Some((subreddit, title, selftext, createdUtc))
-        } catch {
-          case _: Exception => None
-        }
-      }
-    } catch {
-      case _: Exception => List()
+
+    (parse(jsonContent) \ "data" \ "children").children.map { child =>
+      val title = (child \ "data" \ "title").extract[String]
+      val selftext = (child \ "data" \ "selftext").extract[String]
+      val createdUtc = (child \ "data" \ "created_utc").extract[String]
+      // val createdUtc = (data \ "created_utc").extract[Double].toLong
+      // val date = TextProcessing.formatDateFromUTC(createdUtc)
+      // TODO: implementar formateo estandar de fecha
+      (subreddit, title, selftext, createdUtc)
     }
   }
 
@@ -50,5 +39,4 @@ object FileIO {
     val source = Source.fromURL(url)
     source.mkString
   }
-
 }
