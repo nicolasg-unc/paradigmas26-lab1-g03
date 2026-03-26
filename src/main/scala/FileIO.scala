@@ -26,11 +26,9 @@ object FileIO {
     (parse(jsonContent) \ "data" \ "children").children.map { child =>
       val title = (child \ "data" \ "title").extract[String]
       val selftext = (child \ "data" \ "selftext").extract[String]
-      val createdUtc = (child \ "data" \ "created_utc").extract[String]
-      // val createdUtc = (data \ "created_utc").extract[Double].toLong
-      // val date = TextProcessing.formatDateFromUTC(createdUtc)
-      // TODO: implementar formateo estandar de fecha
-      (subreddit, title, selftext, createdUtc)
+      val createdUtc = (child \ "data" \ "created_utc").extract[Double].toLong
+      val date = TextProcessing.formatDateFromUTC(createdUtc)
+      (subreddit, title, selftext, date)
     }
   }
 
