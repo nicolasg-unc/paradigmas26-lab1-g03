@@ -11,8 +11,17 @@ object Main {
       FileIO.extractPosts(subscription._1, post)
     }
 
+    def filterPosts(xs: List[Post]): List[Post] = {
+      xs.filter { case (_, title, selftext, _) =>
+        selftext.trim != "" && // tengan sólo espacios o no tiene texto
+        title != "" // no tiene título
+      }
+    }
+
+    val postsFiltered = filterPosts(allPosts)
+
     // TODO: a veces algunos caracteres explotan y el formateo se ve mal
-    val output = allPosts
+    val output = postsFiltered
       .map { case (subreddit, title, selftext, formattedDate) =>
         s"Subreddit: $subreddit\n Title: $title\n Date: $formattedDate\n Content: ${selftext.take(100)}...\n" + ("-" * 80)
       }
