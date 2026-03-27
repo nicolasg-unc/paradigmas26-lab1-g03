@@ -13,8 +13,8 @@ object Main {
 
     def filterPosts(xs: List[Post]): List[Post] = {
       xs.filter { case (_, title, selftext, _) =>
-        selftext.trim != "" && // tengan sólo espacios o no tiene texto
-        title != "" // no tiene título
+        selftext.trim != "" && // descartamos los que sólo tienen espacios y los que no tienen texto
+        title != "" // descartamos los que no tiene título
       }
     }
 
