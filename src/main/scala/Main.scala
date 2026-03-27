@@ -5,26 +5,25 @@ object Main {
 
     val subscriptions: List[Subscription] = FileIO.readSubscriptions()
 
-    val allPosts: List[Post] = subscriptions.flatMap { subscription =>
-      println(s"Fetching posts from: ${subscription._1} (${subscription._2})")
-      val post = FileIO.downloadFeed(subscription._2)
-      FileIO.extractPosts(subscription._1, post)
+    val allPosts: List[(String, List[Post])] = subscriptions.map { case (subredditName, url) =>
+      println(s"Fetching posts from: $url")
+      println(s"Fetching posts from: $subredditName $url")
+      val posts = FileIO.downloadFeed(url)
+      val post_list = FileIO.extractPosts(subredditName, posts)
+      (url, post_list)
     }
 
     def filterPosts(xs: List[Post]): List[Post] = {
       xs.filter { case (_, title, selftext, _) =>
-        selftext.trim != "" && // descartamos los que sólo tienen espacios y los que no tienen texto
-        title != "" // descartamos los que no tiene título
+        selftext.trim != "" &&  // descartamos los que sólo tienen espacios y los que no tienen texto
+        title != ""             // descartamos los que no tiene título
       }
     }
 
-    val postsFiltered = filterPosts(allPosts)
+    val postsFiltered = allPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
 
-    // TODO: a veces algunos caracteres explotan y el formateo se ve mal
-    val output = postsFiltered
-      .map { case (subreddit, title, selftext, formattedDate) =>
-        s"Subreddit: $subreddit\n Title: $title\n Date: $formattedDate\n Content: ${selftext.take(100)}...\n" + ("-" * 80)
-      }
+    val output = postsFiltered.map { case (url, posts) =>
+      Formatters.formatSubscription(url, posts) }
       .mkString("\n")
 
     println(output)
