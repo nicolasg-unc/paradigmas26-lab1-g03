@@ -27,7 +27,7 @@ object FileIO {
       val title = (child \ "data" \ "title").extract[String]
       val selftext = (child \ "data" \ "selftext").extract[String]
       val createdUtc = (child \ "data" \ "created_utc").extract[Double].toLong
-      val date = TextProcessing.formatDateFromUTC(createdUtc)
+      val date = Formatters.formatDateFromUTC(createdUtc)
       (subreddit, title, selftext, date)
     }
   }
