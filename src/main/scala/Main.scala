@@ -6,7 +6,7 @@ object Main {
     val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
     val subList = subscriptions match {
       case Some(sub) => sub
-      case None => 
+      case None => //Si el .json está malformado, dañado, o no se encuentra, abortar
         println("Error: Couldn't read subcriptions.json. Please check the file and try again.")
         return
     }
@@ -17,7 +17,7 @@ object Main {
       posts match {
         case Some(content) =>
           val extractedPosts = FileIO.extractPosts(subredditName, content).flatten
-          (url, extractedPosts)
+          (url, extractedPosts) // Se ignoran los posts "rotos"
         case None =>
           println(s"Error: Failed to download feed for subreddit $subredditName.")
           (url, List())
@@ -31,9 +31,10 @@ object Main {
       }
     }
 
+    // Se evita imprimir "Posts from" de un subreddit inválido
     val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
     val postsFiltered = validPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
-    
+
     val output = postsFiltered.map { case (url, posts) =>
       Formatters.formatSubscription(url, posts) }
       .mkString("\n")

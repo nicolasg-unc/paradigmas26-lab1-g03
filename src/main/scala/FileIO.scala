@@ -37,7 +37,7 @@ object FileIO {
         Some((subreddit, title, selftext, date))
       } catch {
         case _: Exception =>
-          brokenPosts += 1
+          brokenPosts += 1 // declaracion imperativa?? cuestionable?
           None
       }
     }
@@ -52,7 +52,7 @@ object FileIO {
       val content = source.mkString
       source.close()
       if (content.trim.startsWith("{\"kind\":")) Some(content)
-      else None
+      else None // las strings de contenido válido para subreddits comienzan con {"kind":. Si no, descartar.
     } catch {
       case _: Exception => None
     }
