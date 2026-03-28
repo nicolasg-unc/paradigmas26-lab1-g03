@@ -3,14 +3,25 @@ object Main {
   type Post = (String, String, String, String)  // (subreddit, title, selftext, formattedDate)
   def main(args: Array[String]): Unit = {
 
-    val subscriptions: List[Subscription] = FileIO.readSubscriptions()
+    val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
+    val subList = subscriptions match {
+      case Some(sub) => sub
+      case None => 
+        println("Error: Couldn't read subcriptions.json. Please check the file and try again.")
+        return
+    }
 
-    val allPosts: List[(String, List[Post])] = subscriptions.map { case (subredditName, url) =>
-      println(s"Fetching posts from: $url")
-      println(s"Fetching posts from: $subredditName $url")
+    val allPosts: List[(String, List[Post])] = subList.map { case (subredditName, url) =>
+      println(s"Fetching posts from: \"$subredditName\", $url")
       val posts = FileIO.downloadFeed(url)
-      val post_list = FileIO.extractPosts(subredditName, posts)
-      (url, post_list)
+      posts match {
+        case Some(content) =>
+          val extractedPosts = FileIO.extractPosts(subredditName, content).flatten
+          (url, extractedPosts)
+        case None =>
+          println(s"Error: Failed to download feed for subreddit $subredditName.")
+          (url, List())
+      }
     }
 
     def filterPosts(xs: List[Post]): List[Post] = {
@@ -20,8 +31,9 @@ object Main {
       }
     }
 
-    val postsFiltered = allPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
-
+    val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
+    val postsFiltered = validPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
+    
     val output = postsFiltered.map { case (url, posts) =>
       Formatters.formatSubscription(url, posts) }
       .mkString("\n")

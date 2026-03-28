@@ -10,5 +10,9 @@
   {
     "name": "Learn Python",
     "url": "https://www.reddit.com/r/learnpython/.json?count=10"
+  },
+  {
+    "name": "Fail case",
+    "url": "https://www.reddt.com/r/learnpython/.json?count=10"
   }
 ]
