@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter
 
 object FileIO {
   /* Pure function to read subscriptions from a JSON file */
-  def readSubscriptions(): Option[List[Main.Subscription]] = {
+  def readSubscriptions(): Option[List[PostHandling.Subscription]] = {
     try {
       implicit val formats = org.json4s.DefaultFormats
       val source = Source.fromFile("./subscriptions.json")
@@ -24,7 +24,7 @@ object FileIO {
     }
   }
 
-  def extractPosts(subreddit: String, jsonContent: String): List[Option[Main.Post]] = {
+  def extractPosts(subreddit: String, jsonContent: String): List[Option[PostHandling.Post]] = {
     implicit val formats = org.json4s.DefaultFormats
     var brokenPosts = 0
 

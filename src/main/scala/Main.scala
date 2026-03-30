@@ -1,9 +1,11 @@
+import scala.io.StdIn
+
 object Main {
-  type Subscription = (String, String)          // (subredditName, url)
-  type Post = (String, String, String, String)  // (subreddit, title, selftext, formattedDate)
   def main(args: Array[String]): Unit = {
 
-    val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
+    println("\nReddit Post Browser\n")
+
+    val subscriptions: Option[List[PostHandling.Subscription]] = FileIO.readSubscriptions()
     val subList = subscriptions match {
       case Some(sub) => sub
       case None => //Si el .json está malformado, dañado, o no se encuentra, abortar
@@ -11,34 +13,66 @@ object Main {
         return
     }
 
-    val allPosts: List[(String, List[Post])] = subList.map { case (subredditName, url) =>
-      println(s"Fetching posts from: \"$subredditName\", $url")
-      val posts = FileIO.downloadFeed(url)
-      posts match {
-        case Some(content) =>
-          val extractedPosts = FileIO.extractPosts(subredditName, content).flatten
-          (url, extractedPosts) // Se ignoran los posts "rotos"
-        case None =>
-          println(s"Error: Failed to download feed for subreddit $subredditName.")
-          (url, List())
+    val indexedSubs = subList.zipWithIndex.map { case ((subredditName, url), index) =>
+      (index+1, subredditName, url)
+    }
+    
+    print(indexedSubs.map { case (index, subredditName, url) => s"[$index] $subredditName ($url)" }.mkString("\n"))
+    print("\n\nEnter the corresponding number to the subreddit you'd like to browse: ")
+    subredditSelector(readIntSafe(), indexedSubs)
+
+    @scala.annotation.tailrec
+    def subredditSelector(choice: Int, indexedSubsInner: List[(Int, String, String)]): Unit = {
+      if (choice == 0) {
+        println("\nExiting program.")
+      } else if (choice >= 1 && choice <= indexedSubsInner.length) {
+        val (_, subredditName, url) = indexedSubsInner(choice - 1)
+
+        val posts = PostHandling.processPosts(List((subredditName, url)))
+        val postList = posts.head._2
+        val indexedPosts  = postList.zipWithIndex.map { case ((_, title, selftext, formattedDate), index) =>
+          (index+1, title, selftext, formattedDate)
+        }
+        if (!(indexedPosts.isEmpty)) {
+          println(s"\nPosts from $subredditName:")
+          println(indexedPosts.map { case (index, title, _, formattedDate) => s"[$index] $title ($formattedDate)" }.mkString("\n"))
+        }
+        postSelector(readIntSafe(), indexedSubsInner, indexedPosts)
+      } else {
+        println("\nInvalid choice, try again.")
+        println(indexedPosts.map { case (index, title, _, formattedDate) => s"[$index] $title ($formattedDate)" }.mkString("\n"))
+        subredditSelector(readIntSafe(), indexedSubsInner)
       }
     }
 
-    def filterPosts(xs: List[Post]): List[Post] = {
-      xs.filter { case (_, title, selftext, _) =>
-        selftext.trim != "" &&  // descartamos los que sólo tienen espacios y los que no tienen texto
-        title != ""             // descartamos los que no tiene título
+    @scala.annotation.tailrec
+    def postSelector(choice: Int, indexedSubsInner: List[(Int, String, String)], indexedPostsInner: List[(Int, String, String, String)]): Unit = {
+      if (choice == 0) {
+        println("Returning to subreddit selection.\n\n")
+        println(indexedSubsInner.map { case (index, subredditName, url) => s"$index. $subredditName ($url)" }.mkString("\n"))
+        print("\nEnter the corresponding number to the subreddit you'd like to browse: ")
+        subredditSelector(readIntSafe(), indexedSubsInner)
+      } else if (choice >= 1 && choice <= indexedPostsInner.length) {
+        val (_, title, selftext, formattedDate) = indexedPostsInner(choice - 1)
+        println(s"\nTitle: $title\nDate: $formattedDate\n\n$selftext\n")
+        print("Enter 0 to return to subreddit selection or another number to view another post: ")
+        postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
+      } else {
+        print("Invalid choice, try again.")
+        postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       }
     }
 
-    // Se evita imprimir "Posts from" de un subreddit inválido
-    val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
-    val postsFiltered = validPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
-
-    val output = postsFiltered.map { case (url, posts) =>
-      Formatters.formatSubscription(url, posts) }
-      .mkString("\n")
-
-    println(output)
+    @scala.annotation.tailrec //para que no reviente con " 1"
+    def readIntSafe(prompt: String = ""): Int = {
+      if (prompt.nonEmpty) print(prompt)
+      try {
+        StdIn.readInt()
+      } catch {
+        case _: NumberFormatException =>
+          println("Invalid input. Please enter a number.")
+          readIntSafe(prompt)
+      }
+    }
   }
 }
