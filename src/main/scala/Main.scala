@@ -1,6 +1,6 @@
 object Main {
   type Subscription = (String, String)          // (subredditName, url)
-  type Post = (String, String, String, String)  // (subreddit, title, selftext, formattedDate)
+  type Post = (String, String, String, String, Int)  // (subreddit, title, selftext, formattedDate, score)
   def main(args: Array[String]): Unit = {
 
     val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
