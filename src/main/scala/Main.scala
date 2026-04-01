@@ -35,6 +35,19 @@ object Main {
     val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
     val postsFiltered = validPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
 
+    // Para cada suscripción (url, posts), calcula las estadísticas necesarias para el informe:
+    // subredditName, score total, frecuencias de palabras y top 5 posts.
+    val subscriptionStats: List[
+      (String, String, Int, Map[String, Int], List[Post])
+    ] = postsFiltered.map {
+        case (url, posts) =>
+        val subredditName = posts.head._1
+        val score = Analytics.totalScore(posts)
+        val frequencies = Map("Scala" -> 3, "Reddit" -> 1) // TODO: implementar función wordFrequencies (Ej. 5)
+        val top = List(posts.head) // TODO: implementar función topPosts (Ej. 6)
+        (url, subredditName, score, frequencies, top)
+    }
+
     val output = postsFiltered.map { case (url, posts) =>
       Formatters.formatSubscription(url, posts) }
       .mkString("\n")
