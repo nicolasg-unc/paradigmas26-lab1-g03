@@ -9,8 +9,8 @@ object Formatters {
     val header = s"\n${"=" * 80}\nPosts from: $url \n${"=" * 80}"
 
     val formattedPosts = posts.map {
-      case (subreddit, title, selftext, formattedDate) =>
-      s"Subreddit: $subreddit\nTitle: $title\nDate: $formattedDate\nContent: ${selftext.take(80)}...\n${"-"*80}"
+      case (subreddit, title, selftext, formattedDate, score) =>
+      s"Subreddit: $subreddit\nTitle: $title\nDate: $formattedDate\nScore: $score\nContent: ${selftext.take(80)}...\n${"-"*80}"
       }.mkString("\n")
 
       s"$header\n$formattedPosts"

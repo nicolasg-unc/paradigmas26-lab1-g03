@@ -34,7 +34,8 @@ object FileIO {
         val selftext = (child \ "data" \ "selftext").extract[String]
         val createdUtc = (child \ "data" \ "created_utc").extract[Double].toLong
         val date = Formatters.formatDateFromUTC(createdUtc)
-        Some((subreddit, title, selftext, date))
+        val score = (child \ "data" \ "score").extract[Int]
+        Some((subreddit, title, selftext, date, score))
       } catch {
         case _: Exception =>
           brokenPosts += 1 // declaracion imperativa?? cuestionable?
