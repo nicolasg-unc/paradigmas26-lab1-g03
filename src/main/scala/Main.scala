@@ -34,7 +34,7 @@ object Main {
 
     // Se evita imprimir "Posts from" de un subreddit inválido
     val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
-    val postsFiltered = validPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
+    val postsFiltered = validPosts.map { case (url, postList) => (url, filterPosts(postList)) }
 
     // Para cada suscripción (url, postList), calcula las estadísticas necesarias para el informe:
     // subredditName, score total, frecuencias de palabras y primeros 5 posts.
@@ -46,13 +46,6 @@ object Main {
         val firstPosts = postList.take(5)
         (url, subredditName, score, frequencies, firstPosts)
     }
-
-    // TODO: borrar esto
-    val output = postsFiltered.map { case (url, posts) =>
-      Formatters.formatSubscription(url, posts) }
-      .mkString("\n")
-
-    println(output)
 
     // Formatear reporte e imprimir
     val report = Formatters.formatReport(reportData)

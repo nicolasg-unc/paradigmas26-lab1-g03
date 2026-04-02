@@ -1,9 +1,6 @@
 import scala.io.Source
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 object FileIO {
   /* Pure function to read subscriptions from a JSON file */
