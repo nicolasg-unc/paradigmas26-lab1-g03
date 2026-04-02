@@ -1,6 +1,7 @@
 object Main {
   type Subscription = (String, String)          // (subredditName, url)
   type Post = (String, String, String, String, Int)  // (subreddit, title, selftext, formattedDate, score)
+  type SubscriptionReport = (String, String, Int, Map[String, Int], List[Post])
   def main(args: Array[String]): Unit = {
 
     val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
@@ -35,23 +36,26 @@ object Main {
     val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
     val postsFiltered = validPosts.map { case (url, post_list) => (url, filterPosts(post_list)) }
 
-    // Para cada suscripción (url, posts), calcula las estadísticas necesarias para el informe:
-    // subredditName, score total, frecuencias de palabras y top 5 posts.
-    val subscriptionStats: List[
-      (String, String, Int, Map[String, Int], List[Post])
-    ] = postsFiltered.map {
-        case (url, posts) =>
-        val subredditName = posts.head._1
-        val score = Analytics.totalScore(posts)
+    // Para cada suscripción (url, postList), calcula las estadísticas necesarias para el informe:
+    // subredditName, score total, frecuencias de palabras y primeros 5 posts.
+    val reportData: List[SubscriptionReport] = postsFiltered.map {
+        case (url, postList) =>
+        val subredditName = postList.head._1
+        val score = Analytics.totalScore(postList)
         val frequencies = Map("Scala" -> 3, "Reddit" -> 1) // TODO: implementar función wordFrequencies (Ej. 5)
-        val top = List(posts.head) // TODO: implementar función topPosts (Ej. 6)
-        (url, subredditName, score, frequencies, top)
+        val firstPosts = postList.take(5)
+        (url, subredditName, score, frequencies, firstPosts)
     }
 
+    // TODO: borrar esto
     val output = postsFiltered.map { case (url, posts) =>
       Formatters.formatSubscription(url, posts) }
       .mkString("\n")
 
     println(output)
+
+    // Formatear reporte e imprimir
+    val report = Formatters.formatReport(reportData)
+    println(report)
   }
 }
