@@ -1,6 +1,9 @@
 object Main {
-  type Subscription = (String, String)          // (subredditName, url)
-  type Post = (String, String, String, String, Int)  // (subreddit, title, selftext, formattedDate, score)
+  // (subredditName, urlSub)
+  type Subscription = (String, String)
+  // (subreddit, title, selftext, formattedDate, score, urlPost)
+  type Post = (String, String, String, String, Int, String)
+  // (urlSub, subredditName, score, frequencies, firstPosts)
   type SubscriptionReport = (String, String, Int, Map[String, Int], List[Post])
   def main(args: Array[String]): Unit = {
 
@@ -26,7 +29,7 @@ object Main {
     }
 
     def filterPosts(xs: List[Post]): List[Post] = {
-      xs.filter { case (_, title, selftext, _, _) =>
+      xs.filter { case (_, title, selftext, _, _, url) =>
         selftext.trim != "" &&  // descartamos los que sólo tienen espacios y los que no tienen texto
         title != ""             // descartamos los que no tiene título
       }
