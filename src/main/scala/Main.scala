@@ -48,9 +48,9 @@ object Main {
     @scala.annotation.tailrec
     def postSelector(choice: Int, indexedSubsInner: List[(Int, String, String)], indexedPostsInner: List[(Int, String, String, String)]): Unit = {
       if (choice == 0) {
-        println("Returning to subreddit selection.\n\n")
+        println("\nReturning to subreddit selection.\n\n")
         println(indexedSubsInner.map { case (index, subredditName, url) => s"$index. $subredditName ($url)" }.mkString("\n"))
-        print("\nEnter the corresponding number to the subreddit you'd like to browse: ")
+        print("\nEnter the corresponding number to the subreddit you'd like to browse, or 0 to exit: ")
         subredditSelector(readIntSafe(), indexedSubsInner)
       } else if (choice >= 1 && choice <= indexedPostsInner.length) {
         val (_, title, selftext, formattedDate) = indexedPostsInner(choice - 1)
@@ -58,7 +58,7 @@ object Main {
         print("Enter 0 to return to subreddit selection or another number to view another post: ")
         postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       } else {
-        print("Invalid choice, try again.")
+        print("Invalid choice, try again.\n")
         postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       }
     }
