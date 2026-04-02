@@ -37,10 +37,10 @@ object Main {
           println(s"\nPosts from $subredditName:")
           println(indexedPosts.map { case (index, title, _, formattedDate) => s"[$index] $title ($formattedDate)" }.mkString("\n"))
         }
+        print("\n\nEnter the corresponding number to the post you'd like to open: ")
         postSelector(readIntSafe(), indexedSubsInner, indexedPosts)
       } else {
         println("\nInvalid choice, try again.")
-        println(indexedPosts.map { case (index, title, _, formattedDate) => s"[$index] $title ($formattedDate)" }.mkString("\n"))
         subredditSelector(readIntSafe(), indexedSubsInner)
       }
     }
