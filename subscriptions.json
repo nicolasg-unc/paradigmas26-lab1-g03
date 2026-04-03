@@ -1,18 +1,18 @@
 [
   {
     "name": "Scala",
-    "url": "https://www.reddit.com/r/scala/.json?count=10"
+    "url": "https://www.reddit.com/r/scala/.json?limit=10"
   },
   {
     "name": "Learn Programming",
-    "url": "https://www.reddit.com/r/learnprogramming/.json?count=10"
+    "url": "https://www.reddit.com/r/learnprogramming/.json?limit=10"
   },
   {
     "name": "Learn Python",
-    "url": "https://www.reddit.com/r/learnpython/.json?count=10"
+    "url": "https://www.reddit.com/r/learnpython/.json?limit=10"
   },
   {
     "name": "Fail case",
-    "url": "https://www.reddt.com/r/learnpython/.json?count=10"
+    "url": "https://www.reddi.com/r/learnpython/.json?limit=10"
   }
 ]

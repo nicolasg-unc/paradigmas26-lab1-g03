@@ -18,7 +18,7 @@ object Main {
     }
     
     print(indexedSubs.map { case (index, subredditName, url) => s"[$index] $subredditName ($url)" }.mkString("\n"))
-    print("\n\nEnter the corresponding number to the subreddit you'd like to browse: ")
+    print("\n\nEnter the corresponding number to the subreddit you'd like \nto browse: ")
     subredditSelector(readIntSafe(), indexedSubs)
 
     @scala.annotation.tailrec
@@ -30,15 +30,20 @@ object Main {
 
         val posts = PostHandling.processPosts(List((subredditName, url)))
         val postList = posts.head._2
-        val indexedPosts  = postList.zipWithIndex.map { case ((_, title, selftext, formattedDate), index) =>
-          (index+1, title, selftext, formattedDate)
-        }
-        if (!(indexedPosts.isEmpty)) {
+        if (postList.nonEmpty) {
+          val filteredPosts = PostHandling.filterPosts(postList)
+          val indexedPosts  = filteredPosts.zipWithIndex.map { case ((_, title, selftext, formattedDate), index) =>
+            (index+1, title, selftext, formattedDate)
+          }
           println(s"\nPosts from $subredditName:")
           println(indexedPosts.map { case (index, title, _, formattedDate) => s"[$index] $title ($formattedDate)" }.mkString("\n"))
+          print("\n\nEnter the corresponding number to the post you'd like to \nopen, or 0 to return to subreddit selection: ")
+          postSelector(readIntSafe(), indexedSubsInner, indexedPosts)
+        } else {
+          println(indexedSubsInner.map { case (index, subredditName, url) => s"$index. $subredditName ($url)" }.mkString("\n"))
+          print("\nEnter the corresponding number to the subreddit you'd like to \nbrowse, or 0 to exit: ")
+          subredditSelector(readIntSafe(), indexedSubsInner)
         }
-        print("\n\nEnter the corresponding number to the post you'd like to open: ")
-        postSelector(readIntSafe(), indexedSubsInner, indexedPosts)
       } else {
         println("\nInvalid choice, try again.")
         subredditSelector(readIntSafe(), indexedSubsInner)
@@ -50,15 +55,15 @@ object Main {
       if (choice == 0) {
         println("\nReturning to subreddit selection.\n\n")
         println(indexedSubsInner.map { case (index, subredditName, url) => s"$index. $subredditName ($url)" }.mkString("\n"))
-        print("\nEnter the corresponding number to the subreddit you'd like to browse, or 0 to exit: ")
+        print("\nEnter the corresponding number to the subreddit you'd like to \nbrowse, or 0 to exit: ")
         subredditSelector(readIntSafe(), indexedSubsInner)
       } else if (choice >= 1 && choice <= indexedPostsInner.length) {
         val (_, title, selftext, formattedDate) = indexedPostsInner(choice - 1)
         println(s"\nTitle: $title\nDate: $formattedDate\n\n$selftext\n")
-        print("Enter 0 to return to subreddit selection or another number to view another post: ")
+        print("Enter 0 to return to subreddit selection or another number to \nview another post: ")
         postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       } else {
-        print("Invalid choice, try again.\n")
+        print("\nInvalid choice, try again.\n")
         postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       }
     }
