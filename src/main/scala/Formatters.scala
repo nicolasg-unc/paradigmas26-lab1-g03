@@ -12,7 +12,7 @@ object Formatters {
     header + scoreSection + frequenciesSection + firstPostsSection
   }.mkString("\n")
 
-  def buildFrequenciesString(frequencies: Map[String, Int]): String = {
+  def buildFrequenciesString(frequencies: List[(String, Int)]): String = {
     frequencies.map { case (word, count) => s"\t- $word: $count\n" }.mkString
   }
 

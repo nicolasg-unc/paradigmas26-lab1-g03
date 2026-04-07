@@ -4,7 +4,7 @@ object Main {
   // (subreddit, title, selftext, formattedDate, score, urlPost)
   type Post = (String, String, String, String, Int, String)
   // (urlSub, subredditName, score, frequencies, firstPosts)
-  type SubscriptionReport = (String, String, Int, Map[String, Int], List[Post])
+  type SubscriptionReport = (String, String, Int, List[(String, Int)], List[Post])
   def main(args: Array[String]): Unit = {
 
     val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
@@ -45,7 +45,7 @@ object Main {
         case (url, postList) =>
         val subredditName = postList.head._1
         val score = Analytics.totalScore(postList)
-        val frequencies = Map("Scala" -> 3, "Reddit" -> 1) // TODO: implementar función wordFrequencies (Ej. 5)
+        val frequencies = Analytics.mapFrequencies(postList)
         val firstPosts = postList.take(5)
         (url, subredditName, score, frequencies, firstPosts)
     }
