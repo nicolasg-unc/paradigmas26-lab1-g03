@@ -1,6 +1,10 @@
 import scala.io.StdIn
 
 object Main {
+  type IndexedPost = (Int, String, String, String, String, Int, String) // (index, subName, title, selftext, formattedDate, score, urlPost)
+  type IndexedSub = (Int, String, String) // (index, subredditName, url)
+  type SubscriptionReport = (String, Int, List[(String, Int)], List[IndexedPost])
+  // (subredditName, score, frequencies, firstPosts)
   def main(args: Array[String]): Unit = {
 
     println("\nReddit Post Browser\n")
@@ -17,31 +21,26 @@ object Main {
       (index+1, subredditName, url)
     }
     
-    print(indexedSubs.map { case (index, subredditName, url) => s"[$index] $subredditName ($url)" }.mkString("\n"))
-    print("\n\nEnter the corresponding number to the subreddit you'd like \nto browse: ")
+    Formatters.printSubredditOptions(indexedSubs)
     subredditSelector(readIntSafe(), indexedSubs)
 
     @scala.annotation.tailrec
-    def subredditSelector(choice: Int, indexedSubsInner: List[(Int, String, String)]): Unit = {
+    def subredditSelector(choice: Int, indexedSubsInner: List[IndexedSub]): Unit = {
       if (choice == 0) {
         println("\nExiting program.")
       } else if (choice >= 1 && choice <= indexedSubsInner.length) {
         val (_, subredditName, url) = indexedSubsInner(choice - 1)
-
         val posts = PostHandling.processPosts(List((subredditName, url)))
         val postList = posts.head._2
         if (postList.nonEmpty) {
           val filteredPosts = PostHandling.filterPosts(postList)
-          val indexedPosts  = filteredPosts.zipWithIndex.map { case ((_, title, selftext, formattedDate), index) =>
-            (index+1, title, selftext, formattedDate)
+          val indexedPosts  = filteredPosts.zipWithIndex.map { case ((subName, title, selftext, formattedDate, score, urlPost), index) =>
+            (index+1, subName, title, selftext, formattedDate, score, urlPost)
           }
-          println(s"\nPosts from $subredditName:")
-          println(indexedPosts.map { case (index, title, _, formattedDate) => s"[$index] $title ($formattedDate)" }.mkString("\n"))
-          print("\n\nEnter the corresponding number to the post you'd like to \nopen, or 0 to return to subreddit selection: ")
+          Formatters.printPostOptions(indexedPosts)
           postSelector(readIntSafe(), indexedSubsInner, indexedPosts)
         } else {
-          println(indexedSubsInner.map { case (index, subredditName, url) => s"$index. $subredditName ($url)" }.mkString("\n"))
-          print("\nEnter the corresponding number to the subreddit you'd like to \nbrowse, or 0 to exit: ")
+          Formatters.printSubredditOptions(indexedSubsInner)
           subredditSelector(readIntSafe(), indexedSubsInner)
         }
       } else {
@@ -51,16 +50,20 @@ object Main {
     }
 
     @scala.annotation.tailrec
-    def postSelector(choice: Int, indexedSubsInner: List[(Int, String, String)], indexedPostsInner: List[(Int, String, String, String)]): Unit = {
+    def postSelector(choice: Int, indexedSubsInner: List[IndexedSub], indexedPostsInner: List[IndexedPost]): Unit = {
       if (choice == 0) {
         println("\nReturning to subreddit selection.\n\n")
-        println(indexedSubsInner.map { case (index, subredditName, url) => s"$index. $subredditName ($url)" }.mkString("\n"))
-        print("\nEnter the corresponding number to the subreddit you'd like to \nbrowse, or 0 to exit: ")
+        Formatters.printSubredditOptions(indexedSubsInner)
         subredditSelector(readIntSafe(), indexedSubsInner)
       } else if (choice >= 1 && choice <= indexedPostsInner.length) {
-        val (_, title, selftext, formattedDate) = indexedPostsInner(choice - 1)
-        println(s"\nTitle: $title\nDate: $formattedDate\n\n$selftext\n")
-        print("Enter 0 to return to subreddit selection or another number to \nview another post: ")
+        Formatters.printPost(indexedPostsInner(choice - 1))
+        postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
+      } else if (choice == indexedPostsInner.length + 1) {
+        val totalScore = Analytics.totalScore(indexedPostsInner)
+        val frequencies = Analytics.mapFrequencies(indexedPostsInner)
+        val report: SubscriptionReport = (indexedPostsInner.head._2, totalScore, frequencies, indexedPostsInner.take(5))
+        println(Formatters.formatReport(report))
+        print("\nEnter 0 to return to subreddit selection or another number to \nview another post: ")
         postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       } else {
         print("\nInvalid choice, try again.\n")
