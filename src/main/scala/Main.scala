@@ -1,19 +1,57 @@
 object Main {
+  // (subredditName, urlSub)
+  type Subscription = (String, String)
+  // (subreddit, title, selftext, formattedDate, score, urlPost)
+  type Post = (String, String, String, String, Int, String)
+  // (urlSub, subredditName, score, frequencies, firstPosts)
+  type SubscriptionReport = (String, String, Int, List[(String, Int)], List[Post])
   def main(args: Array[String]): Unit = {
-    val header = s"Reddit Post Parser\n${"=" * 40}"
 
-    val subscriptions: List[String] = FileIO.readSubscriptions()
-
-    val allPosts: List[(String, String)] = subscriptions.map { url =>
-      println(s"Fetching posts from: $url")
-      val posts = FileIO.downloadFeed(url)
-      (url, posts)
+    val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
+    val subList = subscriptions match {
+      case Some(sub) => sub
+      case None => //Si el .json está malformado, dañado, o no se encuentra, abortar
+        println("Error: Couldn't read subcriptions.json. Please check the file and try again.")
+        return
     }
 
-    val output = allPosts
-      .map { case (url, posts) => Formatters.formatSubscription(url, posts) }
-      .mkString("\n")
+    val allPosts: List[(String, List[Post])] = subList.map { case (subredditName, url) =>
+      println(s"Fetching posts from: \"$subredditName\", $url")
+      val posts = FileIO.downloadFeed(url)
+      posts match {
+        case Some(content) =>
+          val extractedPosts = FileIO.extractPosts(subredditName, content).flatten
+          (url, extractedPosts) // Se ignoran los posts "rotos"
+        case None =>
+          println(s"Error: Failed to download feed for subreddit $subredditName.")
+          (url, List())
+      }
+    }
 
-    println(output)
+    def filterPosts(xs: List[Post]): List[Post] = {
+      xs.filter { case (_, title, selftext, _, _, url) =>
+        selftext.trim != "" &&  // descartamos los que sólo tienen espacios y los que no tienen texto
+        title != ""             // descartamos los que no tiene título
+      }
+    }
+
+    // Se evita imprimir "Posts from" de un subreddit inválido
+    val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
+    val postsFiltered = validPosts.map { case (url, postList) => (url, filterPosts(postList)) }
+
+    // Para cada suscripción (url, postList), calcula las estadísticas necesarias para el informe:
+    // subredditName, score total, frecuencias de palabras y primeros 5 posts.
+    val reportData: List[SubscriptionReport] = postsFiltered.map {
+        case (url, postList) =>
+        val subredditName = postList.head._1
+        val score = Analytics.totalScore(postList)
+        val frequencies = Analytics.mapFrequencies(postList)
+        val firstPosts = postList.take(5)
+        (url, subredditName, score, frequencies, firstPosts)
+    }
+
+    // Formatear reporte e imprimir
+    val report = Formatters.formatReport(reportData)
+    println(report)
   }
 }
