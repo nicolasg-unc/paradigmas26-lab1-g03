@@ -4,7 +4,7 @@ import org.json4s.jackson.JsonMethods._
 
 object FileIO {
   /* Pure function to read subscriptions from a JSON file */
-  def readSubscriptions(): Option[List[Main.Subscription]] = {
+  def readSubscriptions(): Option[List[PostHandling.Subscription]] = {
     try {
       implicit val formats = org.json4s.DefaultFormats
       val source = Source.fromFile("./subscriptions.json")
@@ -21,9 +21,8 @@ object FileIO {
     }
   }
 
-  def extractPosts(subreddit: String, jsonContent: String): List[Option[Main.Post]] = {
+  def extractPosts(subreddit: String, jsonContent: String): List[Option[PostHandling.Post]] = {
     implicit val formats = org.json4s.DefaultFormats
-    var brokenPosts = 0
 
     val output = (parse(jsonContent) \ "data" \ "children").children.map { child =>
       try {
@@ -36,11 +35,13 @@ object FileIO {
         Some((subreddit, title, selftext, date, score, urlPost))
       } catch {
         case _: Exception =>
-          brokenPosts += 1 // declaracion imperativa?? cuestionable?
           None
       }
     }
-    if (brokenPosts > 0) println(s"Warning: $brokenPosts posts were skipped due to missing fields or invalid JSON structure.")
+    val brokenPosts = output.count(_.isEmpty)
+    if (brokenPosts > 0) {
+      println(s"Warning: $brokenPosts posts were skipped due\n to missing or malformed data.")
+    }
     output
   }
 

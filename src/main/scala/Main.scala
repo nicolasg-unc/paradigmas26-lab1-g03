@@ -1,13 +1,15 @@
+import scala.io.StdIn
+
 object Main {
-  // (subredditName, urlSub)
-  type Subscription = (String, String)
-  // (subreddit, title, selftext, formattedDate, score, urlPost)
-  type Post = (String, String, String, String, Int, String)
-  // (urlSub, subredditName, score, frequencies, firstPosts)
-  type SubscriptionReport = (String, String, Int, List[(String, Int)], List[Post])
+  type IndexedPost = (Int, String, String, String, String, Int, String) // (index, subName, title, selftext, formattedDate, score, urlPost)
+  type IndexedSub = (Int, String, String) // (index, subredditName, url)
+  type SubscriptionReport = (String, Int, List[(String, Int)], List[IndexedPost])
+  // (subredditName, score, frequencies, firstPosts)
   def main(args: Array[String]): Unit = {
 
-    val subscriptions: Option[List[Subscription]] = FileIO.readSubscriptions()
+    println("\nReddit Post Browser\n")
+
+    val subscriptions: Option[List[PostHandling.Subscription]] = FileIO.readSubscriptions()
     val subList = subscriptions match {
       case Some(sub) => sub
       case None => //Si el .json está malformado, dañado, o no se encuentra, abortar
@@ -15,43 +17,70 @@ object Main {
         return
     }
 
-    val allPosts: List[(String, List[Post])] = subList.map { case (subredditName, url) =>
-      println(s"Fetching posts from: \"$subredditName\", $url")
-      val posts = FileIO.downloadFeed(url)
-      posts match {
-        case Some(content) =>
-          val extractedPosts = FileIO.extractPosts(subredditName, content).flatten
-          (url, extractedPosts) // Se ignoran los posts "rotos"
-        case None =>
-          println(s"Error: Failed to download feed for subreddit $subredditName.")
-          (url, List())
+    val indexedSubs = subList.zipWithIndex.map { case ((subredditName, url), index) =>
+      (index+1, subredditName, url)
+    }
+    
+    Formatters.printSubredditOptions(indexedSubs)
+    subredditSelector(readIntSafe(), indexedSubs)
+
+    @scala.annotation.tailrec
+    def subredditSelector(choice: Int, indexedSubsInner: List[IndexedSub]): Unit = {
+      if (choice == 0) {
+        println("\nExiting program.")
+      } else if (choice >= 1 && choice <= indexedSubsInner.length) {
+        val (_, subredditName, url) = indexedSubsInner(choice - 1)
+        val posts = PostHandling.processPosts(List((subredditName, url)))
+        val postList = posts.head._2
+        if (postList.nonEmpty) {
+          val filteredPosts = PostHandling.filterPosts(postList)
+          val indexedPosts  = filteredPosts.zipWithIndex.map { case ((subName, title, selftext, formattedDate, score, urlPost), index) =>
+            (index+1, subName, title, selftext, formattedDate, score, urlPost)
+          }
+          Formatters.printPostOptions(indexedPosts)
+          postSelector(readIntSafe(), indexedSubsInner, indexedPosts)
+        } else {
+          Formatters.printSubredditOptions(indexedSubsInner)
+          subredditSelector(readIntSafe(), indexedSubsInner)
+        }
+      } else {
+        println("\nInvalid choice, try again.")
+        subredditSelector(readIntSafe(), indexedSubsInner)
       }
     }
 
-    def filterPosts(xs: List[Post]): List[Post] = {
-      xs.filter { case (_, title, selftext, _, _, url) =>
-        selftext.trim != "" &&  // descartamos los que sólo tienen espacios y los que no tienen texto
-        title != ""             // descartamos los que no tiene título
+    @scala.annotation.tailrec
+    def postSelector(choice: Int, indexedSubsInner: List[IndexedSub], indexedPostsInner: List[IndexedPost]): Unit = {
+      if (choice == 0) {
+        println("\nReturning to subreddit selection.\n\n")
+        Formatters.printSubredditOptions(indexedSubsInner)
+        subredditSelector(readIntSafe(), indexedSubsInner)
+      } else if (choice >= 1 && choice <= indexedPostsInner.length) {
+        Formatters.printPost(indexedPostsInner(choice - 1))
+        postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
+      } else if (choice == indexedPostsInner.length + 1) {
+        val totalScore = Analytics.totalScore(indexedPostsInner)
+        val frequencies = Analytics.mapFrequencies(indexedPostsInner)
+        val report: SubscriptionReport = (indexedPostsInner.head._2, totalScore, frequencies, indexedPostsInner.take(5))
+        println(Formatters.formatReport(report))
+        print("\nEnter 0 to return to subreddit selection or another number to \nview another post: ")
+        postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
+      } else {
+        print("\nInvalid choice, try again.\n")
+        postSelector(readIntSafe(), indexedSubsInner, indexedPostsInner)
       }
     }
 
-    // Se evita imprimir "Posts from" de un subreddit inválido
-    val validPosts = allPosts.filter { case (_, postList) => postList.nonEmpty }
-    val postsFiltered = validPosts.map { case (url, postList) => (url, filterPosts(postList)) }
-
-    // Para cada suscripción (url, postList), calcula las estadísticas necesarias para el informe:
-    // subredditName, score total, frecuencias de palabras y primeros 5 posts.
-    val reportData: List[SubscriptionReport] = postsFiltered.map {
-        case (url, postList) =>
-        val subredditName = postList.head._1
-        val score = Analytics.totalScore(postList)
-        val frequencies = Analytics.mapFrequencies(postList)
-        val firstPosts = postList.take(5)
-        (url, subredditName, score, frequencies, firstPosts)
+    @scala.annotation.tailrec //para que no reviente con " 1"
+    def readIntSafe(prompt: String = ""): Int = {
+      if (prompt.nonEmpty) print(prompt)
+      try {
+        StdIn.readInt()
+      } catch {
+        case _: NumberFormatException =>
+          println("Invalid input. Please enter a number.")
+          readIntSafe(prompt)
+      }
     }
-
-    // Formatear reporte e imprimir
-    val report = Formatters.formatReport(reportData)
-    println(report)
   }
 }

@@ -21,13 +21,13 @@ object Analytics {
     "wouldnt", "you", "you'd", "youd", "you'll", "youll", "you're", "youre",
     "you've", "youve", "your", "yours", "yourself", "yourselves")
 
-  def totalScore(xs: List[Main.Post]): Int = {
-    xs.foldLeft(0)((acc, post) => acc + post._5) // post._5 == score
+  def totalScore(xs: List[Main.IndexedPost]): Int = {
+    xs.foldLeft(0)((acc, post) => acc + post._6) // post._6 == score
   }
 
-  def filterWords (xs: List[Main.Post]): List[String] = {
+  def filterWords (xs: List[Main.IndexedPost]): List[String] = {
     xs.flatMap (post =>
-      post._3.split(" ").toList
+      post._4.split(" ").toList
       .map(_.replaceAll("[a-z]+;", ""))
       .map(_.replaceAll("[^a-zA-Z0-9_/]", ""))
       .filterNot(_.isEmpty)
@@ -37,7 +37,7 @@ object Analytics {
     )
   }
 
-  def mapFrequencies (xs: List[Main.Post]): List[(String, Int)] = {
+  def mapFrequencies (xs: List[Main.IndexedPost]): List[(String, Int)] = {
     val words = filterWords(xs)
     words.groupBy(identity).mapValues(_.length).toList.sortBy(-_._2)
   }
