@@ -25,8 +25,39 @@ object FileIO {
     try source.mkString finally source.close()
   }
 
-  parseFeed(json: String, subreddit: String): List[Post] = {
-    ???
+  def parseFeed(json: String, subreddit: String): List[Post] = {
+    // JValue (JObject) -> JValue (JArray)
+    val items = parse(json) \ "data" \ "children"
+    // items.children: List[JValue], cada item es un JObject {kind, data}
+    items.children.map { item =>
+      // item \ "data": JValue (JObject) con los campos del post
+      val data = item \ "data"
+      // (data \ "title"): JValue (JString) -> extract: String
+      val title = (data \ "title").extract[String]
+      val selftext  = (data \ "selftext").extract[String]
+      val createdUtc = (data \ "created_utc").extract[Double].toLong
+      // val formattedDate = TextProcessing.formatDateFromUTC(createdUtc)
+      (subreddit, title, selftext, createdUtc.toString) // Post
+    }
   }
 }
+
+/*
+{
+  "data": {
+    "children": [
+      {
+        "kind": "t3",
+        "data": {
+          "title": "...",
+          "selftext": "...",
+          "created_utc": 1234567890.0,
+          "score": 42,
+          "url": "..."
+        }
+      }
+    ]
+  }
+}
+*/
 
