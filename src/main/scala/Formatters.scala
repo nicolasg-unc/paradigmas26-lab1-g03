@@ -1,4 +1,6 @@
-
+/*
+Formatters: convierte datos ya procesados en strings para mostrar: armar el informe, los headers, el layout de salida. Lógica de presentación.
+*/
 object Formatters {
 
   // Pure function to format posts from a subscription
@@ -8,3 +10,4 @@ object Formatters {
     header + "\n" + formattedPosts
   }
 }
+
