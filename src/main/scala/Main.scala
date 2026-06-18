@@ -4,7 +4,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     val header = s"Reddit Post Parser\n${"=" * 40}"
 
-    val subscriptions: List[Subscription] = FileIO.readSubscriptions("./subscriptions.json")
+    val subscriptions: List[Subscription] = FileIO.readSubscriptions("./local_subscriptions.json")
 
     val allPosts: List[(Subscription, List[Post])] = subscriptions.map { case (subreddit, url) =>
       println(s"Fetching posts from: $url")
