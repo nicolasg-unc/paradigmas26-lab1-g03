@@ -23,7 +23,9 @@ object FileIO {
         }
       })
     } catch {
-      case _: Exception => None // fallo de archivo o JSON mal formado
+      case e: Exception =>
+        println(s"Error al leer el archivo de suscripciones: ${e.getMessage}")
+        None
     }
   }
 
@@ -54,11 +56,15 @@ object FileIO {
         (title, selftext, createdUtc) match {
           case (Some(t), Some(s), Some(d)) =>
             Some((subreddit, t, s, TextProcessing.formatDateFromUTC(d))) // Post válido
-          case _ => None // campos faltantes, se descarta
+          case _ => // campos faltantes, se descarta
+            println(s"Error: post con campos faltantes, se descarta")
+            None
         }
       })
     } catch {
-      case _: Exception => None // JSON mal formado
+      case e: Exception => // JSON mal formado
+        println(s"Error al parsear el feed de $subreddit: ${e.getMessage}")
+        None
     }
   }
 }
