@@ -13,6 +13,10 @@ object Main {
       ((subreddit, url), posts)
     }
 
+    val validPosts: List[(Subscription, List[Post])] = allPosts.map { case (subscription, posts) =>
+      (subscription, posts.filter(TextProcessing.isValidPost)) // posts.filter(p => TextProcessing.isValidPost(p))
+    }
+
     /*val output = allPosts
       .map { case (url, posts) => Formatters.formatSubscription(url, posts) }
       .mkString("\n")

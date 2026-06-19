@@ -4,6 +4,7 @@ TextProcessing: transforma y analiza texto como dato: parsear fechas, contar pal
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import Domain._
 
 object TextProcessing {
   def formatDateFromUTC(utcSeconds: Long): String = {
