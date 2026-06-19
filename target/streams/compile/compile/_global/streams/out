@@ -1,0 +1,5 @@
+[0m[[0m[33mwarn[0m] [0m[0mD:\Obsidian\FaMAF\3A1C PARAD-PROG-LABO\Parcial 1 2026-04-16\skeleton\src\main\scala\Main.scala:112:52: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: None[0m
+[0m[[0m[33mwarn[0m] [0m[0m      val extractedPosts = filteredPosts.map {p => p match {case Some(x) => x }}[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0mone warning found[0m
