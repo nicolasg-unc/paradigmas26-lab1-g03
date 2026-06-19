@@ -6,12 +6,12 @@ import Domain._
 object FileIO {
   implicit val formats: Formats = DefaultFormats
   // Pure function to read subscriptions from a JSON file
-  def readSubscriptions(path: String): Option[List[Subscription]] = {
+  def readSubscriptions(path: String): Option[List[Option[Subscription]]] = {
     try {
       val source = Source.fromFile(path)
       val content = try source.mkString finally source.close() // String, cierra siempre
            // JValue (JArray) -> children: List[JValue]
-      Some(parse(content).children.flatMap { item => // flatMap aplana los None y Some(x) -> x
+      Some(parse(content).children.map { item => // map NO aplana los None y Some(x)
         // item: JValue (JObject), \ navega el campo, extractOpt[String] lo convierte
         val name = (item \ "name").extractOpt[String] // Option[String]
         val url  = (item \ "url").extractOpt[String]  // Option[String]

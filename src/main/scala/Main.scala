@@ -4,14 +4,25 @@ object Main {
   def main(args: Array[String]): Unit = {
     val header = s"Reddit Post Parser\n${"=" * 40}"
 
-    val subscriptions: List[Subscription] = FileIO.readSubscriptions("./local_subscriptions.json") match {
+    val subscriptions: List[Option[Subscription]] = FileIO.readSubscriptions("./local_subscriptions.json") match {
       case Some(subs) => subs
       case None =>
         println("Error: no se pudieron leer las suscripciones")
         return
     }
 
-    val allPosts: List[(Subscription, List[Post])] = subscriptions.map { case (subreddit, url) =>
+    // I/O imperativo permitido: imprime cada suscripción o el error si es None
+    for (sub <- subscriptions) {
+      sub match {
+        case Some(s) => println(s._2) // imprime la url construida
+        case None    => println("Error: Could not load subscriptions.")
+      }
+    }
+
+    // descarta los None, se queda solo con las suscripciones válidas
+    val validSubscriptions: List[Subscription] = subscriptions.flatten
+
+    val allPosts: List[(Subscription, List[Post])] = validSubscriptions.map { case (subreddit, url) =>
       println(s"Fetching posts from: $url")
       val posts = FileIO.downloadFeed(url)                            // Option[String]: None si falla la red
         .flatMap(json => FileIO.parseFeed(json, subreddit))           // Option[List[Post]]: None si falla el parsing
