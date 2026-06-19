@@ -12,5 +12,10 @@ object TextProcessing {
       .withZone(ZoneId.of("UTC"))
       .format(Instant.ofEpochSecond(utcSeconds))
   }
+
+  def isValidPost(post: Post): Boolean = { // (subreddit, title, selftext, formattedDate)
+    post._2.trim.nonEmpty && // título no vacío ni solo espacios
+      post._3.trim.nonEmpty  // selftext no vacío ni solo espacios
+  }
 }
 
