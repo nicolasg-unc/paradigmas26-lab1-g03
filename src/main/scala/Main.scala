@@ -29,6 +29,14 @@ object Main {
 
     println(output)
     */
+    val output = validPosts.map { case (subscription, posts) =>
+      val score = TextProcessing.totalScore(posts)
+      val words = TextProcessing.wordFrequencies(posts)
+      val top5  = posts.take(5)
+      Formatters.formatSubscription(subscription, posts, score, words, top5)
+    }.mkString("\n")
+
+    println(output)
   }
 }
 
