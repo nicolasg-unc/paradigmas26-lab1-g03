@@ -23,12 +23,6 @@ object Main {
       (subscription, posts.filter(TextProcessing.isValidPost)) // posts.filter(p => TextProcessing.isValidPost(p))
     }
 
-    /*val output = allPosts
-      .map { case (url, posts) => Formatters.formatSubscription(url, posts) }
-      .mkString("\n")
-
-    println(output)
-    */
     val output = validPosts.map { case (subscription, posts) =>
       val score = TextProcessing.totalScore(posts)
       val words = TextProcessing.wordFrequencies(posts)

@@ -5,13 +5,6 @@ import Domain._
 
 object Formatters {
 
-  // Pure function to format posts from a subscription
-/*  def formatSubscription(url: String, posts: String): String = {
-    val header = s"\n${"=" * 80}\nPosts from: $url \n${"=" * 80}"
-    val formattedPosts = posts.take(80)
-    header + "\n" + formattedPosts
-  }*/
-
   def formatSubscription(subscription: Subscription, posts: List[Post], score: Int, words: List[(String, Int)], top5: List[Post]): String = {
     val (subreddit, _) = subscription
     val header           = s"\n${"=" * 80}\nSubreddit: $subreddit\n${"=" * 80}\n"
