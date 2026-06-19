@@ -6,18 +6,25 @@ import Domain._
 object FileIO {
   implicit val formats: Formats = DefaultFormats
   // Pure function to read subscriptions from a JSON file
-  def readSubscriptions(path: String): List[Subscription] = {
-    val source = Source.fromFile(path)
-    // String
-    val content = try source.mkString finally source.close()
-    // JValue (JArray) -> children: List[JValue]
-    parse(content).children.map { item =>
-      // item: JValue (JObject), \ navega el campo, extract[String] lo convierte
-      val name = (item \ "name").extract[String]
-      val url  = (item \ "url").extract[String]
-      (name, url) // Subscription
+  def readSubscriptions(path: String): Option[List[Subscription]] = {
+    try {
+      val source = Source.fromFile(path)
+      val content = try source.mkString finally source.close() // String, cierra siempre
+           // JValue (JArray) -> children: List[JValue]
+      Some(parse(content).children.flatMap { item => // flatMap aplana los None y Some(x) -> x
+        // item: JValue (JObject), \ navega el campo, extractOpt[String] lo convierte
+        val name = (item \ "name").extractOpt[String] // Option[String]
+        val url  = (item \ "url").extractOpt[String]  // Option[String]
+        (name, url) match {
+          case (Some(n), Some(u)) => Some((n, u)) // Subscription válida
+          case _ => None                          // campos faltantes, se descarta
+        }
+      })
+    } catch {
+      case _: Exception => None // fallo de archivo o JSON mal formado
     }
   }
+
 
   // Pure function to download JSON feed from a URL
   def downloadFeed(url: String): String = {
