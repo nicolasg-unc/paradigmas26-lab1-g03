@@ -54,5 +54,10 @@ object TextProcessing {
       .sortBy { case (_, count) => -count } // mayor frecuencia primero
       // sortBy ordena ascendente por defecto, entonces se niega el count para invertir el orden
   }
+
+  def totalScore(posts: List[Post]): Int = {
+    posts.foldLeft(0) { (acc, post) => acc + post._5 }
+    // También: posts.foldLeft(0) { case (acc, (_, _, _, _, score)) => acc + score }
+  }
 }
 
