@@ -43,7 +43,7 @@ object TextProcessing {
 
   def wordFrequencies(posts: List[Post]): List[(String, Int)] = {
     posts
-      .flatMap { case (_, title, selftext, _) => // extraemos title y selftext
+      .flatMap { case (_, title, selftext, _, _) => // extraemos title y selftext
         (title + " " + selftext).split("\\s+").toList // List[String]: palabras, divide por cualquier espacio/tab/newline
       }
       .filter(word => word.head.isUpper)          // solo palabras con mayúscula inicial

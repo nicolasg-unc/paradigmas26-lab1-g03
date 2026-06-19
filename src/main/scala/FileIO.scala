@@ -53,9 +53,10 @@ object FileIO {
         val title      = (data \ "title").extractOpt[String]
         val selftext   = (data \ "selftext").extractOpt[String]
         val createdUtc = (data \ "created_utc").extractOpt[Double].map(_.toLong)
-        (title, selftext, createdUtc) match {
-          case (Some(t), Some(s), Some(d)) =>
-            Some((subreddit, t, s, TextProcessing.formatDateFromUTC(d))) // Post válido
+        val score      = (data \ "score").extractOpt[Int]
+        (title, selftext, createdUtc, score) match {
+          case (Some(t), Some(s), Some(d), Some(sc)) =>
+            Some((subreddit, t, s, TextProcessing.formatDateFromUTC(d), sc)) // Post válido
           case _ => // campos faltantes, se descarta
             println(s"Error: post con campos faltantes, se descarta")
             None
