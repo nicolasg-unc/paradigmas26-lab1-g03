@@ -40,5 +40,19 @@ object TextProcessing {
     post._2.trim.nonEmpty && // título no vacío ni solo espacios
       post._3.trim.nonEmpty  // selftext no vacío ni solo espacios
   }
+
+  def wordFrequencies(posts: List[Post]): List[(String, Int)] = {
+    posts
+      .flatMap { case (_, title, selftext, _) => // extraemos title y selftext
+        (title + " " + selftext).split("\\s+").toList // List[String]: palabras, divide por cualquier espacio/tab/newline
+      }
+      .filter(word => word.head.isUpper)          // solo palabras con mayúscula inicial
+      .filter(word => !stopwords.contains(word.toLowerCase)) // excluir stopwords
+      .groupBy(identity)                          // Map[String, List[String]]: agrupa iguales
+      .map { case (word, occurrences) => (word, occurrences.length) } // Map[String, Int]
+      .toList
+      .sortBy { case (_, count) => -count } // mayor frecuencia primero
+      // sortBy ordena ascendente por defecto, entonces se niega el count para invertir el orden
+  }
 }
 
