@@ -47,7 +47,7 @@ object TextProcessing {
         (title + " " + selftext).split("\\s+").toList // List[String]: palabras, divide por cualquier espacio/tab/newline
       }
       .filter(word => word.head.isUpper)          // solo palabras con mayúscula inicial
-      .filter(word => !stopwords.contains(word.toLowerCase)) // excluir stopwords
+      .filter(word => !stopwords.contains(word.toLowerCase.replace('\u2019', '\''))) // normaliza apóstrofe Unicode (') a ASCII (') antes de comparar con stopwords
       .groupBy(identity)                          // Map[String, List[String]]: agrupa iguales
       .map { case (word, occurrences) => (word, occurrences.length) } // Map[String, Int]
       .toList
