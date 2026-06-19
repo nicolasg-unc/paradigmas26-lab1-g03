@@ -17,7 +17,9 @@ object FileIO {
         val url  = (item \ "url").extractOpt[String]  // Option[String]
         (name, url) match {
           case (Some(n), Some(u)) => Some((n, u)) // Subscription válida
-          case _ => None                          // campos faltantes, se descarta
+          case _ =>
+            println(s"Error: suscripción con campos faltantes, se descarta")
+            None
         }
       })
     } catch {
@@ -25,26 +27,38 @@ object FileIO {
     }
   }
 
-
   // Pure function to download JSON feed from a URL
-  def downloadFeed(url: String): String = {
-    val source = Source.fromURL(url)
-    try source.mkString finally source.close()
+  def downloadFeed(url: String): Option[String] = {
+    try {
+      val source = Source.fromURL(url)
+      Some(try source.mkString finally source.close()) // String, cierra siempre
+    } catch {
+      case e: Exception => // fallo de red o URL inválida
+        println(s"Error al descargar $url: ${e.getMessage}")
+        None
+    }
   }
 
-  def parseFeed(json: String, subreddit: String): List[Post] = {
-    // JValue (JObject) -> JValue (JArray)
-    val items = parse(json) \ "data" \ "children"
-    // items.children: List[JValue], cada item es un JObject {kind, data}
-    items.children.map { item =>
-      // item \ "data": JValue (JObject) con los campos del post
-      val data = item \ "data"
-      // (data \ "title"): JValue (JString) -> extract: String
-      val title = (data \ "title").extract[String]
-      val selftext  = (data \ "selftext").extract[String]
-      val createdUtc = (data \ "created_utc").extract[Double].toLong
-      val formattedDate = TextProcessing.formatDateFromUTC(createdUtc)
-      (subreddit, title, selftext, formattedDate) // Post
+  def parseFeed(json: String, subreddit: String): Option[List[Post]] = {
+    try {
+      // JValue (JObject) -> JValue (JArray)
+      val items = parse(json) \ "data" \ "children"
+      // items.children: List[JValue], cada item es un JObject {kind, data}
+      Some(items.children.flatMap { item =>
+        // item \ "data": JValue (JObject) con los campos del post
+        val data = item \ "data"
+        // extractOpt devuelve Option[String], si falta el campo el post se descarta
+        val title      = (data \ "title").extractOpt[String]
+        val selftext   = (data \ "selftext").extractOpt[String]
+        val createdUtc = (data \ "created_utc").extractOpt[Double].map(_.toLong)
+        (title, selftext, createdUtc) match {
+          case (Some(t), Some(s), Some(d)) =>
+            Some((subreddit, t, s, TextProcessing.formatDateFromUTC(d))) // Post válido
+          case _ => None // campos faltantes, se descarta
+        }
+      })
+    } catch {
+      case _: Exception => None // JSON mal formado
     }
   }
 }

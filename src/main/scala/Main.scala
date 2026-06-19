@@ -13,9 +13,10 @@ object Main {
 
     val allPosts: List[(Subscription, List[Post])] = subscriptions.map { case (subreddit, url) =>
       println(s"Fetching posts from: $url")
-      val json = FileIO.downloadFeed(url)
-      val posts = FileIO.parseFeed(json, subreddit)
-      ((subreddit, url), posts)
+      val posts = FileIO.downloadFeed(url)                            // Option[String]: None si falla la red
+        .flatMap(json => FileIO.parseFeed(json, subreddit))           // Option[List[Post]]: None si falla el parsing
+        .getOrElse(List.empty)                                        // List[Post]: vacía si algún paso falló
+      ((subreddit, url), posts)                                       // (Subscription, List[Post])
     }
 
     val validPosts: List[(Subscription, List[Post])] = allPosts.map { case (subscription, posts) =>
